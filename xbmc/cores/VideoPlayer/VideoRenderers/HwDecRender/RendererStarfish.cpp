@@ -25,9 +25,9 @@ CRendererStarfish::~CRendererStarfish()
 {
   if (m_acbID) {
     long tid = 0;
-    AcbAPI_setState(m_acbID, APPSTATE_FOREGROUND, PLAYSTATE_UNLOADED, &tid);
-    AcbAPI_finalize(m_acbID);
-    AcbAPI_destroy(m_acbID);
+    m_acbAPI.setState(m_acbID, APPSTATE_FOREGROUND, PLAYSTATE_UNLOADED, &tid);
+    m_acbAPI.finalize(m_acbID);
+    m_acbAPI.destroy(m_acbID);
   }
 }
 
@@ -38,25 +38,36 @@ CBaseRenderer* CRendererStarfish::Create(CVideoBuffer* buffer)
   return nullptr;
 }
 
+DllAcbAPI CRendererStarfish::m_acbAPI;
+
 bool CRendererStarfish::Configure(const VideoPicture& picture, float fps, unsigned int orientation)
 {
   auto windowName = dynamic_cast<KODI::WINDOWING::WAYLAND::CWinSystemWaylandWebOS*>(CServiceBroker::GetWinSystem())
         ->GetExportedWindowName();
 
   if (!windowName.size()) {
+    if (!m_acbAPI.IsLoaded()) {
+      m_acbAPI.EnableDelayedUnload(false);
+      if (!m_acbAPI.Load()) {
+        CLog::LogF(LOGERROR, "ACB library load failed");
+        return false;
+      }
+    }
+
     auto mediaID = dynamic_cast<CStarfishVideoBuffer*>(picture.videoBuffer)->mediaID;
-    CLog::LogF(LOGDEBUG, "ACB init, mediaID: {}", mediaID);
-    m_acbID = AcbAPI_create();
-    if (!AcbAPI_initialize(m_acbID, PLAYER_TYPE_MSE, getenv("APPID"), &CRendererStarfish::AcbCallback)) {
-      CLog::LogF(LOGERROR, "ACB init failed");
+    m_acbID = m_acbAPI.create();
+    CLog::LogF(LOGDEBUG, "Initializing ACB, mediaID: {}, ACB ID: {}", mediaID, m_acbID);
+    if (!m_acbAPI.initialize(m_acbID, PLAYER_TYPE_MSE, getenv("APPID"), &CRendererStarfish::AcbCallback)) {
+      CLog::LogF(LOGERROR, "ACB initialization failed");
       m_acbID = 0;
+      return false;
     } else {
-      long tid;
+      long tid = 0;
       // FIXME: change to SINK_TYPE_MAIN after webos-userland update
-      AcbAPI_setSinkType(m_acbID, SINK_TYPE_AUTO);
-      AcbAPI_setMediaId(m_acbID, mediaID.c_str());
-      AcbAPI_setState(m_acbID, APPSTATE_FOREGROUND, PLAYSTATE_LOADED, &tid);
-      CLog::LogF(LOGDEBUG, "ACB LOADED request: {}", tid);
+      m_acbAPI.setSinkType(m_acbID, SINK_TYPE_AUTO);
+      m_acbAPI.setMediaId(m_acbID, mediaID.c_str());
+      m_acbAPI.setState(m_acbID, APPSTATE_FOREGROUND, PLAYSTATE_LOADED, &tid);
+
       m_gotFirstFrame = false;
     }
   }
@@ -87,7 +98,7 @@ void CRendererStarfish::ManageRenderArea()
     if (m_acbID != 0) {
       long tid;
       CLog::LogF(LOGDEBUG, "ACB display: {} {} {}x{} ; {} {} {}x{}", m_sourceRect.x1, m_sourceRect.y1, m_sourceRect.Width(), m_sourceRect.Height(), m_destRect.x1, m_destRect.y1, m_destRect.Width(), m_destRect.Height());
-      AcbAPI_setCustomDisplayWindow(m_acbID, m_sourceRect.x1, m_sourceRect.y1, m_sourceRect.Width(), m_sourceRect.Height(), m_destRect.x1, m_destRect.y1, m_destRect.Width(), m_destRect.Height(), false, &tid);
+      m_acbAPI.setCustomDisplayWindow(m_acbID, m_sourceRect.x1, m_sourceRect.y1, m_sourceRect.Width(), m_sourceRect.Height(), m_destRect.x1, m_destRect.y1, m_destRect.Width(), m_destRect.Height(), false, &tid);
     } else {
       static_cast<KODI::WINDOWING::WAYLAND::CWinSystemWaylandWebOS*>(CServiceBroker::GetWinSystem())
           ->SetExportedWindow(origRect, m_sourceRect, m_destRect);
@@ -110,9 +121,9 @@ void CRendererStarfish::AddVideoPicture(const VideoPicture& picture, int index)
     long tid;
     auto mediaVideoData = dynamic_cast<CStarfishVideoBuffer*>(picture.videoBuffer)->mediaVideoData;
     if (mediaVideoData.size()) {
-      AcbAPI_setMediaVideoData(m_acbID, mediaVideoData.c_str());
+      m_acbAPI.setMediaVideoData(m_acbID, mediaVideoData.c_str());
       // TODO: change to PLAYSTATE_PLAYING after webos-userland update
-      AcbAPI_setState(m_acbID, APPSTATE_FOREGROUND, PLAYSTATE_SEAMLESS_LOADED, &tid);
+      m_acbAPI.setState(m_acbID, APPSTATE_FOREGROUND, PLAYSTATE_SEAMLESS_LOADED, &tid);
       CLog::LogF(LOGDEBUG, "ACB PLAYING request: {}", tid);
       m_gotFirstFrame = true;
     }

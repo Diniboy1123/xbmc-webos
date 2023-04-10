@@ -9,7 +9,7 @@
 #pragma once
 
 #include "cores/VideoPlayer/VideoRenderers/LinuxRendererGLES.h"
-#include <appswitching-control-block/AcbAPI.h>
+#include "DllAcbAPI.h"
 
 class CRendererStarfish : public CLinuxRendererGLES
 {
@@ -45,6 +45,8 @@ protected:
   void ManageRenderArea() override;
 
 private:
+  static DllAcbAPI m_acbAPI;
+
   CRect m_exportedSourceRect;
   CRect m_exportedDestRect;
 

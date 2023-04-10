@@ -124,6 +124,7 @@ protected:
   unsigned int m_sourceHeight = 480;
   float m_sourceFrameRatio = 1.0f;
   float m_fps = 0.0f;
+  bool m_alwaysClip = false;
 
   unsigned int m_renderOrientation = 0; // orientation of the video in degrees counter clockwise
   // for drawing the texture with glVertex4f (holds all 4 corner points of the destination rect

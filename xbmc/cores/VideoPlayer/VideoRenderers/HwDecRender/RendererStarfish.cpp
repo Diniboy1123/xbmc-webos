@@ -68,6 +68,7 @@ bool CRendererStarfish::Configure(const VideoPicture& picture, float fps, unsign
       m_acbAPI.setMediaId(m_acbID, mediaID.c_str());
       m_acbAPI.setState(m_acbID, APPSTATE_FOREGROUND, PLAYSTATE_LOADED, &tid);
 
+      m_alwaysClip = true;
       m_gotFirstFrame = false;
     }
   }

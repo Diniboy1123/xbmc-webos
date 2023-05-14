@@ -101,13 +101,17 @@ private:
   std::string m_formatname{"starfish"};
   bool m_opened{false};
   bool m_useLegacy{false};
+  bool m_videoReady{false};
   int m_codecControlFlags;
-  std::chrono::nanoseconds m_currentPlaytime{0};
+  std::chrono::nanoseconds m_currentPlaytime{TIMESTAMP_UNSET};
+  std::chrono::nanoseconds m_fedTimestamp{TIMESTAMP_UNSET};
 
   StarfishState m_state{StarfishState::FLUSHED};
 
   VideoPicture m_videobuffer;
   std::unique_ptr<CBitstreamConverter> m_bitstream;
+
+  static constexpr auto TIMESTAMP_UNSET = std::chrono::nanoseconds(-1);
 
   static constexpr auto ms_codecMap = make_map<AVCodecID, std::string_view>({
       {AV_CODEC_ID_VP8, "VP8"},

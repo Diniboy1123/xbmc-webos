@@ -63,8 +63,7 @@ bool CRendererStarfish::Configure(const VideoPicture& picture, float fps, unsign
       return false;
     } else {
       long tid = 0;
-      // FIXME: change to SINK_TYPE_MAIN after webos-userland update
-      m_acbAPI.setSinkType(m_acbID, SINK_TYPE_AUTO);
+      m_acbAPI.setSinkType(m_acbID, SINK_TYPE_MAIN);
       m_acbAPI.setMediaId(m_acbID, mediaID.c_str());
       m_acbAPI.setState(m_acbID, APPSTATE_FOREGROUND, PLAYSTATE_LOADED, &tid);
 
@@ -123,8 +122,7 @@ void CRendererStarfish::AddVideoPicture(const VideoPicture& picture, int index)
     auto mediaVideoData = dynamic_cast<CStarfishVideoBuffer*>(picture.videoBuffer)->mediaVideoData;
     if (mediaVideoData.size()) {
       m_acbAPI.setMediaVideoData(m_acbID, mediaVideoData.c_str());
-      // TODO: change to PLAYSTATE_PLAYING after webos-userland update
-      m_acbAPI.setState(m_acbID, APPSTATE_FOREGROUND, PLAYSTATE_SEAMLESS_LOADED, &tid);
+      m_acbAPI.setState(m_acbID, APPSTATE_FOREGROUND, PLAYSTATE_PLAYING, &tid);
       CLog::LogF(LOGDEBUG, "ACB PLAYING request: {}", tid);
       m_gotFirstFrame = true;
     }

@@ -23,7 +23,7 @@ if(NOT TARGET TexturePacker::TexturePacker::Executable)
                                           IMPORTED_LOCATION "${TEXTUREPACKER_EXECUTABLE}")
     message(STATUS "External TexturePacker for KODI_DEPENDSBUILD will be executed during build: ${TEXTUREPACKER_EXECUTABLE}")
   elseif(WIN32)
-    get_filename_component(_tppath "${DEPENDS_PATH}/tools/TexturePacker" ABSOLUTE)
+    get_filename_component(_tppath "${NATIVEPREFIX}/tools/TexturePacker" ABSOLUTE)
     find_program(TEXTUREPACKER_EXECUTABLE NAMES "${APP_NAME_LC}-TexturePacker.exe" TexturePacker.exe
                                           HINTS ${_tppath})
 
@@ -69,7 +69,11 @@ if(NOT TARGET TexturePacker::TexturePacker::Executable)
 
     # Build and install internal TexturePacker if needed
     if (INTERNAL_TEXTUREPACKER_EXECUTABLE OR INTERNAL_TEXTUREPACKER_INSTALLABLE)
-      add_subdirectory(${CMAKE_SOURCE_DIR}/tools/depends/native/TexturePacker build/texturepacker)
+      set(KODI_SOURCE_DIR ${CMAKE_SOURCE_DIR})
+      set(ENABLE_STATIC 1)
+      add_subdirectory(${CMAKE_SOURCE_DIR}/tools/depends/native/TexturePacker/src build/texturepacker)
+      unset(KODI_SOURCE_DIR)
+      unset(ENABLE_STATIC)
       message(STATUS "Building internal TexturePacker")
     endif()
 
